@@ -1,6 +1,7 @@
 """Agent de débogage IA - Analyse d'erreurs Python avec Groq"""
 import json
 import re
+import os
 from groq import Groq
 import config
 
@@ -55,59 +56,39 @@ class AIDebugger:
                 "explication": "Impossible d'analyser l'erreur"
             }
     
+    def _load_prompt(self, prompt_file: str) -> str:
+        """Charge un prompt depuis un fichier texte."""
+        prompts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'prompts')
+        prompt_path = os.path.join(prompts_dir, prompt_file)
+        
+        try:
+            with open(prompt_path, 'r', encoding='utf-8') as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Fichier de prompt introuvable: {prompt_path}")
+    
     def _build_prompt(self, code: str, error: str, filename: str) -> list:
         """Construit les messages pour l'API Groq."""
         
+        # Charger les prompts depuis les fichiers
+        system_content = self._load_prompt('system_prompt.txt')
+        user_template = self._load_prompt('user_prompt.txt')
+        
         system_message = {
             "role": "system",
-            "content": """Tu es un EXPERT en débogage Python.
-
-**RÈGLES:**
-1. Réponds UNIQUEMENT en JSON valide
-2. Fournis des corrections PRÉCISES avec numéros de ligne
-3. Propose UNIQUEMENT les corrections nécessaires
-4. Explique POURQUOI l'erreur se produit
-
-**FORMAT JSON:**
-{
-  "type_erreur": "nom de l'exception",
-  "ligne_erreur": numéro,
-  "cause": "explication",
-  "corrections": [
-    {
-      "ligne": numéro,
-      "code_original": "code actuel",
-      "code_corrige": "code corrigé (peut être multi-lignes)",
-      "explication": "pourquoi cette correction"
-    }
-  ],
-  "conseil": "conseil général"
-}
-
-**IMPORTANT pour code_corrige:**
-- Donne UNIQUEMENT la ligne corrigée, pas un bloc entier
-- Garde la même indentation que la ligne originale
-- Pour ZeroDivisionError: remplace "x / y" par "x / y if y != 0 else 0"
-- Sois MINIMAL, remplace juste ce qui cause l'erreur"""
+            "content": system_content
         }
+        
+        # Remplacer les variables dans le template utilisateur
+        user_content = user_template.format(
+            filename=filename,
+            code=code,
+            error=error
+        )
         
         user_message = {
             "role": "user",
-            "content": f"""Analyse cette erreur Python.
-
-**FICHIER:** {filename}
-
-**CODE:**
-```python
-{code}
-```
-
-**ERREUR:**
-```
-{error}
-```
-
-Réponds en JSON uniquement."""
+            "content": user_content
         }
         
         return [system_message, user_message]

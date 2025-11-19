@@ -1,0 +1,15 @@
+Analyse cette erreur Python.
+
+**FICHIER:** {filename}
+
+**CODE:**
+```python
+{code}
+```
+
+**ERREUR:**
+```
+{error}
+```
+
+Réponds en JSON uniquement.

@@ -14,10 +14,10 @@ def division_dangereuse():
 
 # Erreur 2 : Variable non définie
 def variable_inexistante():
-    print('Message non défini')
+    print('message_non_defini')
 
 # Erreur 3 : Import inexistant
-# import module_qui_nexiste_pas  # Module supprimé car inexistant
+# import module_qui_nexiste_pas  # Commenter ou supprimer cette ligne si le module n'existe pas
 
 print("Exécution normale...")
 resultat = division_dangereuse()
